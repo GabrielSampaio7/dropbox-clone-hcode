@@ -34,23 +34,19 @@ class DropBoxController {
         });
 
         this.inputFilesEl.addEventListener("change", (event) => {
-
-            this.btnSendFileEl.disabled = true;
-
+            this.btnSendFileEl.disabled = true
             this.uploadTask(event.target.files).then(responses => {
                 responses.forEach(resp => {
 
-                    //console.log(resp.files['input-file']);
-                    this.getFirebaseRef().push().set(resp.files['input-file']);
+                    this.getFirebaseRef().push().set(resp.files['input-file'])
+                })
 
-                });
-
-                this.uploadComplete();
+                this.uploadComplete()
 
             }).catch(err => {
-                this.uploadComplete();
-                console.error(err);
-            });
+                this.uploadComplete()
+                console.error(err)
+            })
 
             this.modalShow();
 
@@ -58,13 +54,13 @@ class DropBoxController {
     }
 
     uploadComplete() {
-        this.modalShow(false);
+        this.modalShow(false)
         this.inputFilesEl.value = "";
-        this.btnSendFileEl.disabled = false;
+        this.btnSendFileEl.disabled = false
     }
 
     getFirebaseRef() {
-        return firebase.database().ref('files');
+        return firebase.database().ref('files')
     }
 
     modalShow(show = true) {
@@ -123,8 +119,6 @@ class DropBoxController {
 
         this.nameFileEl.innerHTML = file.name;
         this.timeleftEl.innerHTML = this.formatTimeToHuman(timeleft)
-
-        console.log(timespent, timeleft, porcent); // Test
     }
 
     formatTimeToHuman(duration) {
@@ -133,18 +127,18 @@ class DropBoxController {
         let hours = parseInt((duration / (1000 * 60 * 60)) % 24);
 
         if (hours > 0) {
-            return `${hours} horas, ${minutes} minutos e ${seconds} segundos restante`
+            return `${hours} horas, ${minutes} minutos e ${seconds} segundos`
         }
 
         if (minutes > 0) {
-            return `${minutes} minutos e ${seconds} segundos restante`
+            return `${minutes} minutos e ${seconds} segundos`
         }
 
         if (seconds > 0) {
-            return `${seconds} segundos restante`
+            return `${seconds} segundos`
         }
 
-        return 'finalizando upload';
+        return '';
     }
 
     getFileIconView(file) {
@@ -309,49 +303,69 @@ class DropBoxController {
               </svg>
             `;
         }
-
     }
 
     getFileView(file, key) {
 
-        let li = document.createElement('li');
+        let li = document.createElement('li')
 
-        li.dataset.key = key;
+        li.dataset.key = key
 
         li.innerHTML = `
-            <li>
-                ${this.getFileIconView(file)}
-                <div class="name text-center">${file.name}</div>
-            </li>
+          ${this.getFileIconView(file)}
+          <div class="name text-center">${file.name}</div>
         `
-
-        this.initEventsLi(li);
+        this.initEventsLi(li)
 
         return li;
     }
 
     readFiles() {
-
         this.getFirebaseRef().on('value', snapshot => {
-
             this.listFilesEl.innerHTML = '';
-
             snapshot.forEach(snapshotItem => {
-
                 let key = snapshotItem.key;
-                let data = snapshotItem.val();
+                let data = snapshotItem.val()
 
-                console.log(key, data);
-
-                this.listFilesEl.appendChild(this.getFileView(data, key));
+                this.listFilesEl.appendChild(this.getFileView(data, key))
             })
-
         })
     }
 
-    initEventsLi(li){
+    initEventsLi(li) {
         li.addEventListener('click', e => {
-            li.classList.toggle('selected');
+
+            if (e.shiftKey) {
+                let firstLi = this.listFilesEl.querySelector('.selected');
+
+                if (firstLi) {
+                    let indexStart;
+                    let indexEnd;
+                    let lis = li.parentElement.childNodes;
+
+                    lis.forEach((el, index) => {
+                        if (firstLi === el) indexStart = index;
+                        if (li === el) indexEnd = index;
+                    })
+
+                    let index = [indexStart, indexEnd].sort()
+
+                    lis.forEach((el, i) => {
+                        if (i >= index[0] && i <= index[1]) {
+                            el.classList.add('selected')
+                        }
+                    })
+                    return true;
+                }
+            }
+
+            if (!e.ctrlKey) {
+                this.listFilesEl.querySelectorAll('li.selected').forEach(el => {
+                    el.classList.remove('selected')
+                })
+            }
+
+            li.classList.toggle('selected')
         })
     }
 
